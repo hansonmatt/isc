@@ -1,4 +1,4 @@
-package org.issaquahsoccerclub.app;
+package org.issaquahsoccerclub.data;
 
 import org.issaquahsoccerclub.data.IGotSportEventParserCallback;
 

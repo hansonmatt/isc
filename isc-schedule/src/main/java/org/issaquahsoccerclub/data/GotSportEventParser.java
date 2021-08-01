@@ -24,14 +24,16 @@ public class GotSportEventParser {
             Queue<Element> brackets = new LinkedList<>(scheduleGrid.getElementsByClass("bracket"));
             Queue<Element> divisionBracketDateTables = new LinkedList<>(scheduleGrid.getElementsByClass("standings").select("table"));
 
-            Element division = divisions.poll();
-            while (division != null) {
+            Element division = null;
+            do {
+                division = divisions.poll();
                 int nextDivision = (divisions.isEmpty()) ? Integer.MAX_VALUE : divisions.peek().siblingIndex();
-                Element bracket = brackets.peek();
-                while (bracket != null && bracket.siblingIndex() < nextDivision) {
-                    brackets.remove();
 
+                Element bracket = null;
+                do {
+                    bracket = brackets.poll();
                     int nextBracket = (brackets.isEmpty()) ? Integer.MAX_VALUE : brackets.peek().siblingIndex();
+
                     Element gameDay = divisionBracketDateTables.peek();
                     while (gameDay != null && gameDay.siblingIndex() < nextBracket) {
                         divisionBracketDateTables.remove();
@@ -44,8 +46,8 @@ public class GotSportEventParser {
                         ArrayList<Element> locations = gameDay.getElementsByClass("location").select("td");
 
                         for (int n = 0; n < gameNumbers.size(); ++n) {
-                            theCallback.handleEvent("EventName WIP", "Gender WIP", "Age WIP", division.ownText(),
-                                    "Tier WIP", bracket.ownText(), gameNumbers.get(n).ownText(),
+                            theCallback.handleEvent("EventName WIP", "Gender WIP", "Age WIP", safeElementText(division),
+                                    "Tier WIP", safeElementText(bracket), gameNumbers.get(n).ownText(),
                                     rows.get(0).ownText(), matchTimes.get(n).ownText(), safeTeamName(homeTeams.get(n)), safeTeamName(awayTeams.get(n)), locations.get(n).child(0).child(0).ownText());
                         }
 
@@ -53,11 +55,17 @@ public class GotSportEventParser {
                     }
 
                     bracket = brackets.peek();
-                }
-
-                division = divisions.poll();
-            }
+                } while (bracket != null && bracket.siblingIndex() < nextDivision);
+            } while (!divisions.isEmpty());
         }
+    }
+
+    private String safeElementText(Element theElement) {
+        if (theElement == null) {
+            return "";
+        }
+
+        return theElement.ownText();
     }
 
     private String safeTeamName(Element theTeam) {
