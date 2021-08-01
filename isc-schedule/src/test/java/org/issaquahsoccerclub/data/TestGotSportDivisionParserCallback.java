@@ -3,7 +3,7 @@ package org.issaquahsoccerclub.data;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestGotSportEventParserCallback implements IGotSportEventParserCallback {
+public class TestGotSportDivisionParserCallback implements IGotSportDivisionParserCallback {
     public Map<String, GotSportFlatGame> gotSportFlatGameMap = new HashMap<>();
 
     public void handleEvent(String theEvent, String theGender, String theAge,

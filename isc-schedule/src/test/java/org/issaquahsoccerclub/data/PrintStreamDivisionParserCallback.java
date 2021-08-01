@@ -1,13 +1,11 @@
 package org.issaquahsoccerclub.data;
 
-import org.issaquahsoccerclub.data.IGotSportEventParserCallback;
-
 import java.io.PrintStream;
 
-public class PrintStreamEventParserCallback implements IGotSportEventParserCallback {
+public class PrintStreamDivisionParserCallback implements IGotSportDivisionParserCallback {
     private PrintStream stream;
 
-    public PrintStreamEventParserCallback(PrintStream theStream) {
+    public PrintStreamDivisionParserCallback(PrintStream theStream) {
         this.stream = theStream;
     }
 
