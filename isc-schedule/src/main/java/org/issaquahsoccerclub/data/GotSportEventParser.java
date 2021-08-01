@@ -24,7 +24,6 @@ public class GotSportEventParser {
 
             if (!path.contains("GroupID")) {
                 String scheduleUrl = url.getProtocol() + "://" + url.getHost() + "/events/" + path;
-                String host = url.getHost() + "/events/" + scheduleUrl;
                 gotSportEventDivisionPageParser.schedule(scheduleUrl, theCallback);
             }
 

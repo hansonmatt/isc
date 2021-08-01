@@ -13,9 +13,22 @@ public class PrintStreamDivisionParserCallback implements IGotSportDivisionParse
                             String theDivision, String theTier, String theBracket, String theGameNum,
                             String theGameDate, String theGameTime,
                             String theHomeTeam, String theAwayTeam, String theLocation) {
-        stream.println(theEvent + "," + theGender + "," + theAge + ","
-                + theDivision + "," + theTier + "," + theBracket + ","
-                + theGameNum + "," + theGameDate + "," + theGameTime
-                + "," + theHomeTeam + "," + theAwayTeam + "," + theLocation);
+        if (theHomeTeam.contains("ISC") || theAwayTeam.contains("ISC")) {
+            stream.println(theGameNum
+                    + commaThenAttribute("\"" + theGameDate + "\"")
+                    + commaThenAttribute(theGameTime)
+                    + commaThenAttribute(theDivision)
+                    + commaThenAttribute(theHomeTeam)
+                    + commaThenAttribute(theAwayTeam)
+                    + commaThenAttribute(theLocation));
+        }
+    }
+
+    private String commaThenAttribute(String theAttribute) {
+        if (theAttribute == null) {
+            return ",";
+        }
+
+        return "," + theAttribute;
     }
 }
