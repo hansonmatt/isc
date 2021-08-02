@@ -1,5 +1,6 @@
 package org.issaquahsoccerclub.data;
 
+import org.issaquahsoccerclub.model.Game;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,13 +9,25 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GotSportEventDivisionPageParser {
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+    private SimpleDateFormat format = new SimpleDateFormat("E, MMM d, yyyy h:mm aa");
+
     public void schedule(String theURL, IGotSportDivisionParserCallback theCallback) throws MalformedURLException, IOException {
+        long t0 = System.currentTimeMillis();
         Document document = Jsoup.parse(new URL(theURL), 5000);
+        long t1 = System.currentTimeMillis();
+        logger.log(Level.INFO, "GotSportEventDivisionPageParser parsing for url = '" + theURL + "' took '" + (t1 - t0) + "' ms");
 
         Elements grid12 = document.getElementsByClass("grid_12");
         Element scheduleGrid = grid12.first();
@@ -46,9 +59,30 @@ public class GotSportEventDivisionPageParser {
                         ArrayList<Element> locations = gameDay.getElementsByClass("location").select("td");
 
                         for (int n = 0; n < gameNumbers.size(); ++n) {
-                            theCallback.handleEvent("EventName WIP", "Gender WIP", "Age WIP", safeElementText(division),
-                                    "Tier WIP", safeElementText(bracket), gameNumbers.get(n).ownText(),
-                                    rows.get(0).ownText(), matchTimes.get(n).ownText(), safeTeamName(homeTeams.get(n)), safeTeamName(awayTeams.get(n)), locations.get(n).child(0).child(0).ownText());
+                            String gameId = gameNumbers.get(n).ownText();
+                            if (gameId.length() >= 1 && gameId.charAt(0) == '#') {
+                                gameId = gameId.substring(1);
+                            }
+
+                            String homeTeam = safeTeamName(homeTeams.get(n));
+
+                            Date gameDate = Game.BAD_DATE;
+                            String gameDateString = rows.get(0).ownText() + " " + matchTimes.get(n).ownText();
+                            try
+                            {
+                                gameDate = format.parse(gameDateString);
+                            }
+                            catch (ParseException px)
+                            {
+                                logger.log(Level.SEVERE, "Unable to parse game date '" + gameDateString + "'", px);
+                            }
+
+                            Game game = new Game(gameId, gameDate, safeElementText(division), homeTeam, safeTeamName(awayTeams.get(n)), homeTeam, locations.get(n).child(0).child(0).ownText());
+                            theCallback.handleEvent(game);
+
+//                            theCallback.handleEvent("EventName WIP", "Gender WIP", "Age WIP", safeElementText(division),
+//                                    "Tier WIP", safeElementText(bracket), gameId,
+//                                    rows.get(0).ownText(), matchTimes.get(n).ownText(), safeTeamName(homeTeams.get(n)), safeTeamName(awayTeams.get(n)), locations.get(n).child(0).child(0).ownText());
                         }
 
                         gameDay = divisionBracketDateTables.peek();
