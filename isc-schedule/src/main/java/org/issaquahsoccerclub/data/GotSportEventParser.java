@@ -1,5 +1,6 @@
 package org.issaquahsoccerclub.data;
 
+import org.issaquahsoccerclub.util.ISCGotSportUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GotSportEventParser {
+    // TODO: dependency injection
     private GotSportEventDivisionPageParser gotSportEventDivisionPageParser = new GotSportEventDivisionPageParser();
 
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -30,10 +32,10 @@ public class GotSportEventParser {
             String path = divisionSchedule.attributes().get("href");
 
             if (!path.contains("GroupID")) {
-                String scheduleUrl = url.getProtocol() + "://" + url.getHost() + "/events/" + path;
+                // TODO: better URL creation
+                String scheduleUrl = ISCGotSportUtil.GOT_SPORT_BASE_URL + "/events/" + path;
                 gotSportEventDivisionPageParser.schedule(scheduleUrl, theCallback);
             }
-
         }
     }
 }

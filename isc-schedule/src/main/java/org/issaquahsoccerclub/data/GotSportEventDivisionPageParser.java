@@ -1,6 +1,8 @@
 package org.issaquahsoccerclub.data;
 
 import org.issaquahsoccerclub.model.Game;
+import org.issaquahsoccerclub.model.Team;
+import org.issaquahsoccerclub.util.ISCGotSportUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,20 +13,22 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GotSportEventDivisionPageParser {
     private Logger logger = Logger.getLogger(this.getClass().getName());
-
+    // TODO: config-based formatting
     private SimpleDateFormat format = new SimpleDateFormat("E, MMM d, yyyy h:mm aa");
+
+    private Map<String, Team> teamMap = new HashMap<>();
+    // TODO: dependency injection
+    private GotSportTeamPageParser gotSportTeamPageParser = new GotSportTeamPageParser();
 
     public void schedule(String theURL, IGotSportDivisionParserCallback theCallback) throws MalformedURLException, IOException {
         long t0 = System.currentTimeMillis();
+        // TODO: timeout config
         Document document = Jsoup.parse(new URL(theURL), 5000);
         long t1 = System.currentTimeMillis();
         logger.log(Level.INFO, "GotSportEventDivisionPageParser parsing for url = '" + theURL + "' took '" + (t1 - t0) + "' ms");
@@ -59,14 +63,14 @@ public class GotSportEventDivisionPageParser {
                         ArrayList<Element> locations = gameDay.getElementsByClass("location").select("td");
 
                         for (int n = 0; n < gameNumbers.size(); ++n) {
+                            // TODO: defensive null checks, validation
                             String gameId = gameNumbers.get(n).ownText();
                             if (gameId.length() >= 1 && gameId.charAt(0) == '#') {
                                 gameId = gameId.substring(1);
                             }
 
-                            String homeTeam = safeTeamName(homeTeams.get(n));
-
                             Date gameDate = Game.BAD_DATE;
+                            // TODO: defensive null checks, validation
                             String gameDateString = rows.get(0).ownText() + " " + matchTimes.get(n).ownText();
                             try
                             {
@@ -77,12 +81,42 @@ public class GotSportEventDivisionPageParser {
                                 logger.log(Level.SEVERE, "Unable to parse game date '" + gameDateString + "'", px);
                             }
 
-                            Game game = new Game(gameId, gameDate, safeElementText(division), homeTeam, safeTeamName(awayTeams.get(n)), homeTeam, locations.get(n).child(0).child(0).ownText());
-                            theCallback.handleEvent(game);
+                            // TODO: defensive null checks, validation
+                            String homeTeamName = safeTeamName(homeTeams.get(n));
+                            // TODO: defensive null checks, validation
+                            String teamUrl = getTeamUrl(homeTeams.get(n));
+                            Team homeTeam = new Team(homeTeamName);
+                            try {
+                                // TODO: url validator
+                                if (teamUrl.length() > 0) {
+                                    String url = ISCGotSportUtil.GOT_SPORT_BASE_URL + teamUrl;
+                                    homeTeam = gotSportTeamPageParser.getTeam(url);
+                                }
+                            }
+                            catch(IOException x) {
+                                logger.log(Level.SEVERE, "Unable to get team from URL = '" + teamUrl + "'", x);
+                            }
 
-//                            theCallback.handleEvent("EventName WIP", "Gender WIP", "Age WIP", safeElementText(division),
-//                                    "Tier WIP", safeElementText(bracket), gameId,
-//                                    rows.get(0).ownText(), matchTimes.get(n).ownText(), safeTeamName(homeTeams.get(n)), safeTeamName(awayTeams.get(n)), locations.get(n).child(0).child(0).ownText());
+                            // TODO: defensive null checks, validation
+                            String awayTeamName = safeTeamName(awayTeams.get(n));
+                            // TODO: defensive null checks, validation
+                            teamUrl = getTeamUrl(awayTeams.get(n));
+                            Team awayTeam = new Team(awayTeamName);
+                            try {
+                                if (teamUrl.length() > 0) {
+                                    String url = ISCGotSportUtil.GOT_SPORT_BASE_URL + teamUrl;
+                                    awayTeam = gotSportTeamPageParser.getTeam(url);
+                                }
+                            }
+                            catch(IOException x) {
+                                logger.log(Level.SEVERE, "Unable to get team from URL = '" + teamUrl + "'", x);
+                            }
+
+                            homeTeam.setType(Team.TeamType.HOME);
+                            awayTeam.setType(Team.TeamType.AWAY);
+
+                            Game game = new Game(gameId, gameDate, safeElementText(division), locations.get(n).child(0).child(0).ownText(), homeTeam, awayTeam);
+                            theCallback.handleEvent(game);
                         }
 
                         gameDay = divisionBracketDateTables.peek();
@@ -111,6 +145,19 @@ public class GotSportEventDivisionPageParser {
             return theTeam.child(0).ownText();
         } else if (theTeam.childrenSize() == 0) {
             return theTeam.ownText();
+        }
+
+        return "";
+    }
+
+    // TODO: better scheme for URL handling - URLs needed for fetching team data
+    private String getTeamUrl(Element theTeam) {
+        if (theTeam == null) {
+            return "";
+        }
+
+        if (theTeam.childrenSize() == 1) {
+            return theTeam.child(0).attr("href");
         }
 
         return "";
