@@ -2,6 +2,8 @@ package org.issaquahsoccerclub.app;
 
 import org.issaquahsoccerclub.data.GotSportEventParser;
 import org.issaquahsoccerclub.data.ISCGotSoccerParserCallback;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -17,11 +19,13 @@ public class ISCTournamentScheduleMaker {
             return;
         }
 
+        ApplicationContext context = new AnnotationConfigApplicationContext(SpringAppConfig.class);
+
         String tournamentUrl = args[0];
         String fileName = args[1];
         try {
             ISCGotSoccerParserCallback callback = new ISCGotSoccerParserCallback(); //new PrintStreamDivisionParserCallback(stream);
-            GotSportEventParser parser = new GotSportEventParser();
+            GotSportEventParser parser = context.getBean(GotSportEventParser.class); // new GotSportEventParser();
             long t0 = System.currentTimeMillis();
             parser.schedule(tournamentUrl, callback);
             long t1 = System.currentTimeMillis();

@@ -12,6 +12,9 @@ public class TestGotSportEventDivisionPageParser {
     public void testSchedule() throws Exception {
         TestGotSportDivisionParserCallback callback = new TestGotSportDivisionParserCallback();
 
+        // found a tournament page that does not conform to expected gotsport spec...
+        // https://events.gotsport.com/events/?EventID=83479
+
         String testScheduleURL = "https://events.gotsport.com/events/schedule.aspx?EventID=79629&GroupID=1057505&Gender=Boys&Age=14";
         gotSportEventDivisionPageParser.schedule(testScheduleURL, callback);
         Assert.assertEquals(10, callback.gameMap.size());

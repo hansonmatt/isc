@@ -16,13 +16,14 @@ import java.util.logging.Logger;
 
 public class GotSportEventParser {
     // TODO: dependency injection
-    private GotSportEventDivisionPageParser gotSportEventDivisionPageParser = new GotSportEventDivisionPageParser();
+    private GotSportEventDivisionPageParser gotSportEventDivisionPageParser; // = new GotSportEventDivisionPageParser();
 
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     public void schedule(String theURL, IGotSportDivisionParserCallback theCallback) throws MalformedURLException, IOException {
         URL url = new URL(theURL);
         long t0 = System.currentTimeMillis();
+        // TODO: mock Jsoup
         Document document = Jsoup.parse(url, 5000);
         long t1 = System.currentTimeMillis();
         logger.log(Level.INFO, "GotSportEventParser parsing for url = '" + theURL + "' took '" + (t1 - t0) + "' ms");
@@ -37,5 +38,9 @@ public class GotSportEventParser {
                 gotSportEventDivisionPageParser.schedule(scheduleUrl, theCallback);
             }
         }
+    }
+
+    public void setGotSportEventDivisionPageParser(GotSportEventDivisionPageParser gotSportEventDivisionPageParser) {
+        this.gotSportEventDivisionPageParser = gotSportEventDivisionPageParser;
     }
 }
